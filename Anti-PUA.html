@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Sadge 的職場生存戰：終極版</title>
+    <style>
+        :root {
+            --pua-color: #ff4757;
+            --safe-color: #2ed573;
+            --bg-chat: #f2f0e4; 
+            --bg-container: #ffffff; 
+            --text-primary: #2c3e50; 
+            --chat-bar-green: #a0e7c6; 
+        }
+
+        /* 使用 dvh 確保手機瀏覽器不被截斷 */
+        body {
+            background-color: var(--bg-chat);
+            color: var(--text-primary);
+            font-family: 'Microsoft JhengHei', sans-serif;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            height: 100dvh; 
+            margin: 0; 
+            padding: 10px;
+            box-sizing: border-box;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        h1 { margin: 5px 0; font-size: 1.2rem; flex-shrink: 0; }
+
+        /* 遊戲主容器：響應式填滿 */
+        #game-container {
+            position: relative; 
+            width: 100%;
+            max-width: 400px; 
+            flex: 1; 
+            background: var(--bg-container);
+            border: 2px solid #dcdde1; 
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column;
+            margin-bottom: 10px;
+        }
+
+        /* Line 群組標題設定 */
+        .chat-header {
+            width: 100%; height: 45px; background: white;
+            display: flex; align-items: center; padding: 0 15px;
+            box-sizing: border-box; border-bottom: 1px solid #f1f2f6; z-index: 10;
+            flex-shrink: 0;
+        }
+        .chat-header .back { font-size: 18px; margin-right: 10px; }
+        #group-name { font-weight: bold; font-size: 15px; flex-grow: 1; text-align: left; }
+        .chat-header .icons { font-size: 16px; color: #2f3542; letter-spacing: 3px; }
+
+        #play-area { 
+            position: relative; 
+            flex: 1; 
+            width: 100%; 
+            overflow: hidden; 
+        }
+
+        /* 3D 操控按鈕 UI */
+        .controller-ui {
+            position: absolute; 
+            bottom: 10px; 
+            width: 100%;
+            display: flex; 
+            justify-content: space-around; 
+            padding: 0 15px; 
+            box-sizing: border-box; 
+            z-index: 10;
+        }
+
+        .key-btn {
+            width: 80px; height: 80px; 
+            background: #f8f9fa;
+            border: 2px solid #d2dae2; border-radius: 15px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: 0 5px 0 #bdc3c7; 
+            transition: all 0.05s; position: relative;
+            cursor: pointer; touch-action: none;
+            user-select: none;
+        }
+
+        .key-btn.active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #bdc3c7;
+            background: #e1f5fe;
+        }
+
+        .key-btn .key-icon { font-size: 24px; }
+        .key-btn .key-desc { font-size: 10px; font-weight: bold; margin-top: 2px; }
+
+        /* 讀取窗 (判定區) */
+        .judgment-zone {
+            position: absolute; 
+            bottom: 105px; 
+            width: 100%; height: 70px;
+            border-top: 2px dashed #dfe4ea; border-bottom: 2px dashed #dfe4ea;
+            background: rgba(0,0,0,0.02); pointer-events: none;
+            display: flex; align-items: center; justify-content: center;
+            color: #dfe4ea; font-size: 10px; font-weight: bold;
+        }
+
+        #sadge {
+            position: absolute; 
+            bottom: 185px; 
+            left: 50%; transform: translateX(-50%); 
+            font-size: 50px; z-index: 9;
+        }
+
+        .bubble {
+            position: absolute; padding: 12px; border-radius: 18px;
+            background: white; color: black; font-weight: bold; width: 140px;
+            text-align: center; animation: fall linear forwards;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+            font-size: 14px;
+        }
+        .pua { border: 3px solid var(--pua-color); background: #fffcfc; }
+        .safe { border: 3px solid var(--safe-color); background: #fcfdfc; }
+
+        @keyframes fall { 0% { top: -80px; } 100% { top: 105%; } }
+
+        /* 飄出的字體特效 - 停留 3 秒 */
+        .hit-effect {
+            position: absolute; 
+            font-size: 24px; 
+            font-weight: bold;
+            z-index: 15;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3); 
+            text-align: center; 
+            width: 100%;
+            pointer-events: none; 
+            animation: fadeUp 3s ease-out forwards;
+        }
+
+        @keyframes fadeUp {
+            0% { opacity: 1; transform: translate(-50%, 0); }
+            70% { opacity: 1; transform: translate(-50%, -80px); } 
+            100% { opacity: 0; transform: translate(-50%, -120px); } 
+        }
+
+        /* 儀表板與按鈕組 */
+        .dashboard { flex-shrink: 0; font-size: 16px; font-weight: bold; margin: 5px 0; }
+        .btn-group { flex-shrink: 0; margin-bottom: 10px; }
+        
+        #overlay {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.96); z-index: 20;
+            justify-content: center; align-items: center; flex-direction: column; text-align: center; padding: 20px;
+            box-sizing: border-box;
+        }
+
+        button { padding: 10px 20px; border:none; cursor:pointer; border-radius: 8px; font-weight: bold; }
+        #start-btn { background:#2ed573; color:white; }
+        #resign-btn { background:#ff4757; color:white; }
+    </style>
+</head>
+<body>
+
+    <h1>Sadge 的職場生存戰 🥺</h1>
+
+    <div id="game-container">
+        <div class="chat-header">
+            <div class="back">〈</div>
+            <div id="group-name">點擊下方開始...</div>
+            <div class="icons">🔍 📞 ☰</div>
+        </div>
+
+        <div id="play-area">
+            <div class="judgment-zone">JUDGMENT ZONE</div>
+            <div id="sadge">💃</div>
+            <div class="controller-ui">
+                <div id="key-left" class="key-btn left">
+                    <div class="key-icon">🚫</div>
+                    <div class="key-desc">已讀不回</div>
+                </div>
+                <div id="key-right" class="key-btn right">
+                    <div class="key-icon">💾</div>
+                    <div class="key-desc">員工權益</div>
+                </div>
+            </div>
+
+            <div id="overlay">
+                <h2 id="overlay-title"></h2>
+                <p id="overlay-desc"></p>
+                <button onclick="location.reload()" style="background:#1e90ff; color:white;">投新履歷 (重來)</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard">
+        覺醒值: <span id="score">0</span> | <span id="status">潛水中 💃</span>
+    </div>
+
+    <div class="btn-group">
+        <button id="start-btn" onclick="startGame()">進入群組</button>
+        <button id="resign-btn" onclick="togglePause()" style="display:none;">提離職 (暫停)</button>
+    </div>
+
+    <script>
+        const playArea = document.getElementById('play-area');
+        const groupNameEl = document.getElementById('group-name');
+        const sadge = document.getElementById('sadge');
+        const scoreEl = document.getElementById('score');
+        const statusEl = document.getElementById('status');
+        const startBtn = document.getElementById('start-btn');
+        const resignBtn = document.getElementById('resign-btn');
+        const overlay = document.getElementById('overlay');
+        const keyLeft = document.getElementById('key-left');
+        const keyRight = document.getElementById('key-right');
+
+        let score = 0;
+        let gameActive = false;
+        let isPaused = false;
+        let bubbleInterval;
+        let activeBubbles = [];
+
+        const groupNames = ["吳良心老師實驗室", "林道德專案小組", "大家共體時艱組", "24小時熱線組", "栽培新人委員會", "薪水小偷監控中心"];
+        const puaQuotes = ["我在栽培你", "這點事都做不好", "公司是你家", "外面環境更差", "週末回一下訊息", "我對你很失望"];
+        const safeQuotes = ["我有勞基法", "我要下班了", "請給加班費", "這不合理", "已讀不回"];
+
+        function startGame() {
+            gameActive = true; score = 0; updateUI();
+            groupNameEl.innerText = groupNames[Math.floor(Math.random() * groupNames.length)];
+            startBtn.style.display = 'none'; resignBtn.style.display = 'inline-block';
+            sadge.innerText = "🥺";
+            bubbleInterval = setInterval(createBubble, 1200);
+        }
+
+        function createBubble() {
+            if (isPaused || !gameActive) return;
+            const bubble = document.createElement('div');
+            const isPUA = Math.random() > 0.4;
+            bubble.className = `bubble ${isPUA ? 'pua' : 'safe'}`;
+            bubble.innerText = isPUA ? puaQuotes[Math.floor(Math.random()*puaQuotes.length)] : safeQuotes[Math.floor(Math.random()*safeQuotes.length)];
+            bubble.style.left = (Math.random() * (playArea.offsetWidth - 150)) + 'px';
+            bubble.style.animationDuration = '3s';
+            playArea.appendChild(bubble);
+            activeBubbles.push({ el: bubble, isPUA: isPUA });
+
+            bubble.addEventListener('animationend', () => {
+                if (bubble.parentElement) {
+                    if (isPUA) { score -= 10; updateUI(); }
+                    removeBubble(bubble);
+                }
+            });
+        }
+
+        function removeBubble(el) {
+            el.remove();
+            activeBubbles = activeBubbles.filter(b => b.el !== el);
+        }
+
+        function triggerAction(isLeft) {
+            if (!gameActive || isPaused) return;
+            const areaRect = playArea.getBoundingClientRect();
+            let target = null;
+            activeBubbles.forEach(b => {
+                const rect = b.el.getBoundingClientRect();
+                const dist = areaRect.bottom - rect.bottom;
+                // 判定範圍
+                if (dist > 60 && dist < 200) {
+                    if (!target || dist < target.dist) target = { ...b, dist: dist };
+                }
+            });
+            handleAction(target, isLeft);
+        }
+
+        function handleAction(target, isLeftKey) {
+            if (!target) return;
+            if (isLeftKey && target.isPUA) {
+                score += 15; showHitEffect("已讀不回！🚫", "#2ed573"); removeBubble(target.el);
+            } else if (!isLeftKey && !target.isPUA) {
+                score += 15; showHitEffect("奴性ㄅㄅ！💾", "#2ed573"); removeBubble(target.el);
+            } else {
+                score -= 20; showHitEffect("奴性爆發！😭", "#ff4757"); removeBubble(target.el);
+                sadge.innerText = "😭"; setTimeout(() => {if(gameActive) sadge.innerText = "🥺"}, 500);
+            }
+            updateUI();
+        }
+
+        function showHitEffect(text, color) {
+            const effect = document.createElement('div');
+            effect.className = 'hit-effect'; 
+            effect.innerText = text; 
+            effect.style.color = color;
+            effect.style.bottom = '200px'; 
+            effect.style.left = '50%'; 
+            effect.style.transform = 'translateX(-50%)';
+            playArea.appendChild(effect);
+            setTimeout(() => { if (effect.parentElement) effect.remove(); }, 3000);
+        }
+
+        // 觸控與按鍵雙支援
+        keyLeft.addEventListener('pointerdown', (e) => { e.preventDefault(); keyLeft.classList.add('active'); triggerAction(true); });
+        keyLeft.addEventListener('pointerup', () => keyLeft.classList.remove('active'));
+        keyRight.addEventListener('pointerdown', (e) => { e.preventDefault(); keyRight.classList.add('active'); triggerAction(false); });
+        keyRight.addEventListener('pointerup', () => keyRight.classList.remove('active'));
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === "ArrowLeft") { keyLeft.classList.add('active'); triggerAction(true); }
+            if (e.key === "ArrowRight") { keyRight.classList.add('active'); triggerAction(false); }
+        });
+        window.addEventListener('keyup', (e) => {
+            if (e.key === "ArrowLeft") keyLeft.classList.remove('active');
+            if (e.key === "ArrowRight") keyRight.classList.remove('active');
+        });
+
+        function togglePause() {
+            isPaused = !isPaused;
+            if (isPaused) {
+                clearInterval(bubbleInterval); overlay.style.display = 'flex';
+                document.getElementById('overlay-title').innerText = "🏖️ 離職度假中";
+                const bubbles = document.querySelectorAll('.bubble');
+                bubbles.forEach(b => b.style.animationPlayState = 'paused');
+            } else {
+                bubbleInterval = setInterval(createBubble, 1200); overlay.style.display = 'none';
+                const bubbles = document.querySelectorAll('.bubble');
+                bubbles.forEach(b => b.style.animationPlayState = 'running');
+            }
+        }
+
+        function updateUI() {
+            scoreEl.innerText = score;
+            if (score >= 200) statusEl.innerText = "準備退群 😠";
+            else if (score < 0) statusEl.innerText = "奴性深重 ⛓️";
+            else statusEl.innerText = gameActive ? "被 Tag 中 🥺" : "潛水中 💃";
+            if (score <= -100) endGame("GG了", "你變成了隨傳隨到的完美奴隸。");
+            if (score >= 100) endGame("自由了", "你成功退群並封鎖了老闆！");
+        }
+
+        function endGame(title, desc) {
+            gameActive = false; clearInterval(bubbleInterval);
+            overlay.style.display = 'flex';
+            document.getElementById('overlay-title').innerText = title;
+            document.getElementById('overlay-desc').innerText = desc;
+        }
+    </script>
+</body>
+</html>
